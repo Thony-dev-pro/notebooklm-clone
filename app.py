@@ -2,7 +2,9 @@ import streamlit as st
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_core.prompts import PromptTemplate
 from langchain_chroma import Chroma
+from langchain_ollama import OllamaLLM
 import tempfile
 
 embeddings_model = HuggingFaceEmbeddings(
@@ -53,6 +55,7 @@ if boutton and fichier_upload:
 
 conversation = st.chat_input("Conversation")
 
+#Sans LLM
 if conversation and not checkbox_activ_desac_llm:
 
     #recherche dans la base de donnée 
@@ -66,4 +69,41 @@ if conversation and not checkbox_activ_desac_llm:
         st.write(doc.page_content)
         st.write(doc.metadata)
 
+
+#avec LLM  
+if conversation and checkbox_activ_desac_llm : 
+    prompt = PromptTemplate(
+        input_variables=["context","question"],
+        template="""
+            Tu es un assistant qui répond aux questions en utilisant uniquement
+            les informations fournies dans le contexte.
+
+            Contexte :
+            {context}
+
+            Question :
+            {question}
+
+            Réponse :
+        """
+    )
+
+    #recherche dans la base de donnée 
+    vectorstore = Chroma(
+        persist_directory="./chroma_db",
+        embedding_function=embeddings_model
+    )
     
+    resultats = vectorstore.similarity_search(conversation , k = 3)
+
+    contexte = "\n\n".join([doc.page_content for doc in resultats])
+
+    message = prompt.format(context=contexte , question=conversation)
+
+    #appelle LLM
+    llm = OllamaLLM(model="mistral")
+    response = llm.invoke(message)
+
+    st.write(response)
+
+
