@@ -18,10 +18,6 @@ checkbox_activ_desac_llm = st.toggle("Activer/Désactiver le LLM")
 
 st.sidebar.title("Historiques")
 
-if checkbox_activ_desac_llm : 
-    st.write(checkbox_activ_desac_llm)
-
-
 boutton  = st.button("indexer")
 
 if boutton and fichier_upload: 
@@ -56,5 +52,18 @@ if boutton and fichier_upload:
 
 
 conversation = st.chat_input("Conversation")
-st.write(conversation)
 
+if conversation and not checkbox_activ_desac_llm:
+
+    #recherche dans la base de donnée 
+    vectorstore = Chroma(
+        persist_directory="./chroma_db",
+        embedding_function=embeddings_model
+    )
+    
+    resultats = vectorstore.similarity_search(conversation , k = 3)  #k = 3 => afficher les chunks les plus pertinants
+    for doc in resultats : 
+        st.write(doc.page_content)
+        st.write(doc.metadata)
+
+    

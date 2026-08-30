@@ -3,8 +3,12 @@
 ## Installation des dépendances
 
 ```bash
-pip install langchain langchain-community chromadb sentence-transformers streamlit pymupdf
+pip install langchain langchain-community langchain-text-splitters langchain-huggingface langchain-chroma chromadb sentence-transformers streamlit pymupdf
 ```
+
+## Fonctionnement
+
+Les documents PDF sont découpés en chunks (`chunk_size=1000`, `chunk_overlap=200`) puis enregistrés dans ChromaDB avec le metadata `source` contenant le nom du fichier original.
 
 ## Prérequis
 
